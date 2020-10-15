@@ -1,3 +1,5 @@
 *~
 *.class
 template.java
+*.o
+*.exe
