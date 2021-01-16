@@ -1,57 +1,73 @@
-// NOT CORRECT RIGHT NOW
-
+#ifdef LOCAL
+	#define d(...) fprintf(stderr, __VA_ARGS__), fflush(stderr)
+#else
+	#define d(...)
+#endif
 #include <stdio.h>
 #include <algorithm>
 using namespace std;
 
-struct Point{
-    int x, y;
+typedef long long int lli;
+struct point{
+	int x, y;
 };
-
-Point operator - (Point a, Point b){
-    return {a.x - b.x, a.y - b.y};
-}
-
-long long cross(Point a, Point b){
-    return 1LL * a.x * b.y - 1LL * b.x * a.y;
-}
-
-// AB x AC
-long long cross(Point a, Point b, Point c){
-    return cross(b - a, c - a);
-}
-
 const int MN = 2e5+5;
-int N;
-Point pts[MN], hull[MN];
+point pt[MN], upper[MN], lower[MN], hull[MN];
+int N, LS, US, HS;
+
+point operator - (point a, point b){
+	return { a.x - b.x, a.y - b.y };
+}
+
+bool operator < (point a, point b){
+	if(a.x == b.x) return a.y < b.y;
+	return a.x < b.x;
+}
+
+lli cross(point a, point b){
+	return 1LL * a.x * b.y - 1LL * b.x * a.y;
+}
+
+lli cross(point a, point b, point c){
+	return cross(b - a, c - a);
+}
 
 int main(){
-    scanf("%d", &N);
-    for(int i = 0; i < N; i++){
-        int x, y;
-        scanf("%d %d", &x, &y);
-        pts[i] = {x, y};
-    }
+	scanf("%d", &N);
+	for(int i = 0; i < N; i++){
+		int x, y;
+		scanf("%d %d", &x, &y);
+		pt[i] = {x, y};
+	}
 
-    for(int i = 1; i < N; i++){
-        if(pts[i].x < pts[0].x)
-            swap(pts[i], pts[0]);
-    }
+	sort(pt, pt + N);
+	point left = pt[0], right = pt[N - 1];
 
-    sort(pts + 1, pts + N, [] (Point a, Point b){
-        return cross(pts[0], a, b) > 0;
-    });
+	upper[US++] = left;
+	lower[LS++] = left;
 
-    int H = 1;
-    hull[0] = pts[0];
-    for(int i = 1; i < N; i++){
-        while(H >= 2 && cross(hull[H - 2], hull[H - 1], pts[i]) < 0)
-            --H;
-        hull[H] = pts[i];
-        H += 1;
-    }
+	for(int i = 1; i < N; i++){
+		lli cp = cross(left, right, pt[i]);
+		if(cp >= 0){
+			while(US >= 2 && cross(upper[US - 2], upper[US - 1], pt[i]) > 0)
+			   --US;
+			upper[US++] = pt[i];
+		}
+		if(cp <= 0){
+			while(LS >= 2 && cross(lower[LS - 2], lower[LS - 1], pt[i]) < 0)
+				--LS;
+			lower[LS++] = pt[i];
+		}
+	}
 
-    printf("%d\n", H);
-    for(int i = 0; i < H; i++)
-        printf("%d %d\n", hull[i].x, hull[i].y);
+	reverse(upper + 1, upper + US - 1);
+
+	for(int i = 0; i < LS; i++)
+		hull[HS++] = lower[i];
+	for(int i = 1; i < US - 1; i++)
+		hull[HS++] = upper[i];
+
+	printf("%d\n", HS);
+	for(int i = 0; i < HS; i++)
+		printf("%d %d\n", hull[i].x, hull[i].y);
 }

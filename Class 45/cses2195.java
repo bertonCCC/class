@@ -1,47 +1,56 @@
 import java.io.*;
+import java.util.*;
 
 public class cses2195{
-  static int sign(long n){
-    if(n > 0) return 1;
-    else if(n < 0) return -1;
-    return 0;
-  }
-  
   public static void main(String[] args) throws IOException{
     BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
   
-    int T = Integer.parseInt(in.readLine());
-    for(int i = 0; i < T; i++){
-      String[] tokens = in.readLine().split(" ");
-      int x1 = Integer.parseInt(tokens[0]),
-        y1 = Integer.parseInt(tokens[1]),
-        x2 = Integer.parseInt(tokens[2]),
-        y2 = Integer.parseInt(tokens[3]),
-        x3 = Integer.parseInt(tokens[4]),
-        y3 = Integer.parseInt(tokens[5]),
-        x4 = Integer.parseInt(tokens[6]),
-        y4 = Integer.parseInt(tokens[7]);
-      
-      Point A = new Point(x1, y1);
-      Point B = new Point(x2, y2);
-      Point C = new Point(x3, y3);
-      Point D = new Point(x4, y4);
-      
-      boolean ans;
-      
-      if(cross(A, B, C) == 0 && cross(A, B, D) == 0){
-        ans = intersect(A.x, B.x, C.x, D.x) && intersect(A.y, B.y, C.y, D.y);
-      }
-      else{
-        ans = sign(cross(A, B, C)) != sign(cross(A, B, D)) &&
-          sign(cross(C, D, A)) != sign(cross(C, D, B));
-      }
-      
-      if(ans)
-        System.out.println("YES");
-      else
-        System.out.println("NO");
+    int N = Integer.parseInt(in.readLine());
+    Point[] pt = new Point[N], upper = new Point[N], lower = new Point[N];
+    String[] tokens;
+    
+    for(int i = 0; i < N; i++){
+      tokens = in.readLine().split(" ");
+      int x = Integer.parseInt(tokens[0]), y = Integer.parseInt(tokens[1]);
+      pt[i] = new Point(x, y);
     }
+    
+    Arrays.sort(pt, new Comparator<Point>(){
+      public int compare(Point a, Point b){
+        if(a.x == b.x) return a.y - b.y;
+        return a.x - b.x;
+      }
+    });
+    
+    Point left = pt[0], right = pt[N - 1];
+    int Usize = 0, Lsize = 0;
+    
+    for(int i = 0; i < N; i++){
+      long cp = cross(left, right, pt[i]);
+      
+      if(cp >= 0){
+        while(Usize >= 2 && cross(upper[Usize - 2], upper[Usize - 1], pt[i]) > 0)
+          --Usize;
+        upper[Usize] = pt[i];
+        Usize += 1;
+      }
+      
+      if(cp <= 0){
+        while(Lsize >= 2 && cross(lower[Lsize - 2], lower[Lsize - 1], pt[i]) < 0)
+          --Lsize;
+        lower[Lsize] = pt[i];
+        Lsize += 1;
+      }
+    }
+    
+    int total = Lsize + Usize - 2;
+    System.out.println(total);
+    
+    for(int i = 0; i < Lsize; i++)
+      System.out.println(lower[i].x + " " + lower[i].y);
+    
+    for(int i = Usize - 2; i > 0; i--)
+      System.out.println(upper[i].x + " " + upper[i].y);
   }
   
   static Point minus(Point a, Point b){
@@ -49,10 +58,9 @@ public class cses2195{
   }
   
   static long cross(Point a, Point b){
-    return (long) a.x * b.y - (long) b.x * a.y;
+    return 1L * a.x * b.y - 1L * b.x * a.y;
   }
   
-  // AB x AC
   static long cross(Point a, Point b, Point c){
     return cross(minus(b, a), minus(c, a));
   }
@@ -60,8 +68,5 @@ public class cses2195{
 
 class Point{
   int x, y;
-  public Point(int _x, int _y){
-    x = _x;
-    y = _y;
-  }
+  public Point(int _x, int _y){ x = _x; y = _y; }
 }
